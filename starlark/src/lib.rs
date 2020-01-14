@@ -87,3 +87,6 @@ pub mod eval;
 #[macro_use]
 pub mod stdlib;
 pub mod linked_hash_set;
+
+pub use codemap;
+pub use codemap_diagnostic;
