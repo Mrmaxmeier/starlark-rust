@@ -166,7 +166,12 @@ pub struct NativeFunction {
     /// Pointer to a native function.
     /// Note it is a function pointer, not `Box<Fn(...)>`
     /// to avoid generic instantiation and allocation for each native function.
-    function: fn(&mut CallStack, &TypeValues, ParameterParser) -> ValueResult,
+    function: fn(
+        &mut CallStack,
+        &TypeValues,
+        &crate::environment::Environment,
+        ParameterParser,
+    ) -> ValueResult,
     signature: FunctionSignature,
     function_type: FunctionType,
 }
@@ -254,7 +259,12 @@ impl From<FunctionError> for ValueError {
 impl NativeFunction {
     pub fn new(
         name: RcString,
-        function: fn(&mut CallStack, &TypeValues, ParameterParser) -> ValueResult,
+        function: fn(
+            &mut CallStack,
+            &TypeValues,
+            &crate::environment::Environment,
+            ParameterParser,
+        ) -> ValueResult,
         signature: FunctionSignature,
     ) -> Value {
         Value::new(NativeFunction {
@@ -511,6 +521,7 @@ impl TypedValue for NativeFunction {
         &self,
         call_stack: &mut CallStack,
         type_values: &TypeValues,
+        environment: &crate::environment::Environment,
         positional: Vec<Value>,
         named: LinkedHashMap<RcString, Value>,
         args: Option<Value>,
@@ -525,7 +536,7 @@ impl TypedValue for NativeFunction {
             kwargs,
         )?;
 
-        (self.function)(call_stack, type_values, parser)
+        (self.function)(call_stack, type_values, environment, parser)
     }
 }
 
@@ -554,6 +565,7 @@ impl TypedValue for WrappedMethod {
         &self,
         call_stack: &mut CallStack,
         type_values: &TypeValues,
+        environment: &crate::environment::Environment,
         positional: Vec<Value>,
         named: LinkedHashMap<RcString, Value>,
         args: Option<Value>,
@@ -565,8 +577,15 @@ impl TypedValue for WrappedMethod {
             .into_iter()
             .chain(positional.into_iter())
             .collect();
-        self.method
-            .call(call_stack, type_values, positional, named, args, kwargs)
+        self.method.call(
+            call_stack,
+            type_values,
+            environment,
+            positional,
+            named,
+            args,
+            kwargs,
+        )
     }
 }
 

@@ -541,7 +541,7 @@ starlark_module! {global_functions =>
     /// max("two", "three", "four", key=len)  == "three"  # the longest
     /// # )"#).unwrap());
     /// ```
-    max(call_stack cs, env e, *args, ?key) {
+    max(call_stack cs, env e, renv re, *args, ?key) {
         let args = if args.len() == 1 {
             args.swap_remove(0)
         } else {
@@ -566,9 +566,9 @@ starlark_module! {global_functions =>
                 }
             }
             Some(key) => {
-                let mut cached = key.call(cs, e, vec![max.clone()], LinkedHashMap::new(), None, None)?;
+                let mut cached = key.call(cs, e, re, vec![max.clone()], LinkedHashMap::new(), None, None)?;
                 for i in it {
-                    let keyi = key.call(cs, e, vec![i.clone()], LinkedHashMap::new(), None, None)?;
+                    let keyi = key.call(cs, e, re, vec![i.clone()], LinkedHashMap::new(), None, None)?;
                     if cached.compare(&keyi)? == Ordering::Less {
                         max = i;
                         cached = keyi;
@@ -598,7 +598,7 @@ starlark_module! {global_functions =>
     /// min("two", "three", "four", key=len)    == "two"   # the shortest
     /// # )"#).unwrap());
     /// ```
-    min(call_stack cs, env e, *args, ?key) {
+    min(call_stack cs, env e, renv re, *args, ?key) {
         let args = if args.len() == 1 {
             args.swap_remove(0)
         } else {
@@ -623,9 +623,9 @@ starlark_module! {global_functions =>
                 }
             }
             Some(key) => {
-                let mut cached = key.call(cs, e, vec![min.clone()], LinkedHashMap::new(), None, None)?;
+                let mut cached = key.call(cs, e, re, vec![min.clone()], LinkedHashMap::new(), None, None)?;
                 for i in it {
-                    let keyi = key.call(cs, e, vec![i.clone()], LinkedHashMap::new(), None, None)?;
+                    let keyi = key.call(cs, e, re, vec![i.clone()], LinkedHashMap::new(), None, None)?;
                     if cached.compare(&keyi)? == Ordering::Greater {
                         min = i;
                         cached = keyi;
@@ -804,7 +804,7 @@ starlark_module! {global_functions =>
     /// sorted(["two", "three", "four"], key=len, reverse=True)  == ["three", "four", "two"] # longest to shortest
     /// # )"#).unwrap());
     /// ```
-    sorted(call_stack cs, env e, x, /, ?key, reverse = false) {
+    sorted(call_stack cs, env e, renv re, x, /, ?key, reverse = false) {
         let it = x.iter()?;
         let x = it.iter();
         let mut it = match key {
@@ -816,7 +816,7 @@ starlark_module! {global_functions =>
                 for el in x {
                     v.push((
                         el.clone(),
-                        key.call(cs, e, vec![el], LinkedHashMap::new(), None, None)?
+                        key.call(cs, e, re, vec![el], LinkedHashMap::new(), None, None)?
                     ));
                 }
                 v

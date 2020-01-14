@@ -101,6 +101,8 @@ pub enum EvalException {
     IncorrectNumberOfValueToUnpack(Span, i64, i64),
     // Recursion
     Recursion(Span, String, CallStack),
+    // Out of fuel
+    OutOfFuel(Span),
 }
 
 impl From<Diagnostic> for EvalException {
@@ -210,6 +212,16 @@ impl Into<Diagnostic> for EvalException {
                     span: s,
                     style: SpanStyle::Primary,
                     label: Some("Recursive call".to_owned()),
+                }],
+            },
+            EvalException::OutOfFuel(s) => Diagnostic {
+                level: Level::Error,
+                message: "Ran out of fuel".to_owned(),
+                code: Some("FF".into()),
+                spans: vec![SpanLabel {
+                    span: s,
+                    style: SpanStyle::Primary,
+                    label: None,
                 }],
             },
         }
@@ -330,6 +342,7 @@ fn eval_call<E: EvaluationContextEnvironment>(
             eval_expr(e, context)?.call(
                 context.call_stack,
                 context.type_values,
+                context.env.env(),
                 npos,
                 nnamed,
                 nargs,
@@ -463,8 +476,11 @@ fn eval_expr_local<E: EvaluationContextEnvironment>(
         },
         type_values: context.type_values,
         map: context.map.clone(),
+        fuel: context.fuel.clone(),
     };
-    eval_expr(&local.expr, &mut ctx)
+    let res = eval_expr(&local.expr, &mut ctx);
+    context.fuel = ctx.fuel;
+    res
 }
 
 // Evaluate the AST element, i.e. mutate the environment and return an evaluation result
@@ -682,6 +698,9 @@ fn eval_stmt<E: EvaluationContextEnvironment>(
             let mut result = Ok(Value::new(NoneType::None));
             for v in &t(iterable.iter(), &e2.span)? {
                 set_expr(e1, context, v)?;
+                if context.fuel.replace_with(|f| f.wrapping_sub(1)) == 1 {
+                    return Err(EvalException::OutOfFuel(stmt.span));
+                }
                 match eval_block(st, context) {
                     Err(EvalException::Break(..)) => break,
                     Err(EvalException::Continue(..)) => (),
@@ -756,12 +775,13 @@ fn eval_block<E: EvaluationContextEnvironment>(
     Ok(r)
 }
 
-fn eval_module(
+pub fn eval_module(
     module: &Module,
     env: &mut Environment,
     type_values: &TypeValues,
     map: Arc<Mutex<CodeMap>>,
     loader: &dyn FileLoader,
+    fuel: u64,
 ) -> EvalResult {
     let mut call_stack = CallStack::default();
     let mut context = EvaluationContext {
@@ -773,6 +793,7 @@ fn eval_module(
         type_values,
         call_stack: &mut call_stack,
         map,
+        fuel: std::cell::RefCell::new(fuel),
     };
     eval_block(&module.block, &mut context)
 }
@@ -805,6 +826,7 @@ pub fn eval_lexer<T1: Iterator<Item = LexerItem>, T2: LexerIntoIter<T1>>(
         type_values,
         map.clone(),
         file_loader,
+        0,
     ) {
         Ok(v) => Ok(v),
         Err(p) => Err(p.into()),
@@ -838,6 +860,7 @@ pub fn eval(
         type_values,
         map.clone(),
         file_loader,
+        0,
     ) {
         Ok(v) => Ok(v),
         Err(p) => Err(p.into()),
@@ -869,6 +892,7 @@ pub fn eval_file(
         type_values,
         map.clone(),
         file_loader,
+        0,
     ) {
         Ok(v) => Ok(v),
         Err(p) => Err(p.into()),

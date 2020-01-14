@@ -58,6 +58,7 @@ use codemap::CodeMap;
 use codemap::Spanned;
 use codemap_diagnostic::Diagnostic;
 use linked_hash_map::LinkedHashMap;
+use std::cell::RefCell;
 use std::convert::TryInto;
 use std::fmt;
 use std::iter;
@@ -249,6 +250,7 @@ impl TypedValue for Def {
         &self,
         call_stack: &mut CallStack,
         type_values: &TypeValues,
+        environment: &crate::environment::Environment,
         positional: Vec<Value>,
         named: LinkedHashMap<RcString, Value>,
         args: Option<Value>,
@@ -263,6 +265,7 @@ impl TypedValue for Def {
             },
             type_values,
             map: self.map.clone(),
+            fuel: RefCell::new(0), // FIXME(fuel) :/
         };
 
         let mut parser = function::ParameterParser::new(

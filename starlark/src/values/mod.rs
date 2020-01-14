@@ -86,6 +86,7 @@
 use crate::environment::TypeValues;
 use crate::eval::call_stack;
 use crate::eval::call_stack::CallStack;
+use crate::values::context::{EvaluationContext, EvaluationContextEnvironment};
 use crate::values::error::UnsupportedOperation;
 use crate::values::error::ValueError;
 use crate::values::iter::{FakeTypedIterable, RefIterable, TypedIterable};
@@ -430,12 +431,21 @@ impl<T: TypedValue> TypedValueDyn for T {
         &self,
         call_stack: &mut CallStack,
         type_values: &TypeValues,
+        environment: &crate::environment::Environment,
         positional: Vec<Value>,
         named: LinkedHashMap<RcString, Value>,
         args: Option<Value>,
         kwargs: Option<Value>,
     ) -> ValueResult {
-        self.call(call_stack, type_values, positional, named, args, kwargs)
+        self.call(
+            call_stack,
+            type_values,
+            environment,
+            positional,
+            named,
+            args,
+            kwargs,
+        )
     }
 
     fn at_dyn(&self, index: Value) -> Result<Value, ValueError> {
@@ -582,6 +592,7 @@ pub(crate) trait TypedValueDyn: 'static {
         &self,
         call_stack: &mut CallStack,
         type_values: &TypeValues,
+        environment: &crate::environment::Environment,
         positional: Vec<Value>,
         named: LinkedHashMap<RcString, Value>,
         args: Option<Value>,
@@ -782,6 +793,7 @@ pub trait TypedValue: Sized + 'static {
         &self,
         _call_stack: &mut CallStack,
         _type_values: &TypeValues,
+        _environment: &crate::environment::Environment,
         _positional: Vec<Value>,
         _named: LinkedHashMap<RcString, Value>,
         _args: Option<Value>,
@@ -1201,13 +1213,21 @@ impl Value {
         &self,
         call_stack: &mut CallStack,
         type_values: &TypeValues,
+        environment: &crate::environment::Environment,
         positional: Vec<Value>,
         named: LinkedHashMap<RcString, Value>,
         args: Option<Value>,
         kwargs: Option<Value>,
     ) -> ValueResult {
-        self.value_holder()
-            .call_dyn(call_stack, type_values, positional, named, args, kwargs)
+        self.value_holder().call_dyn(
+            call_stack,
+            type_values,
+            environment,
+            positional,
+            named,
+            args,
+            kwargs,
+        )
     }
 
     pub fn at(&self, index: Value) -> ValueResult {

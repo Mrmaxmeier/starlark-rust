@@ -270,6 +270,7 @@ def assert_(cond, msg="assertion failed"):
         match bench_func.call(
             &mut CallStack::default(),
             &type_values,
+            &global,
             Vec::new(),
             LinkedHashMap::new(),
             None,

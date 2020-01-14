@@ -22,6 +22,7 @@ use crate::eval::locals::Locals;
 use crate::eval::FileLoader;
 use crate::values::Value;
 use codemap::CodeMap;
+use std::cell::RefCell;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -34,6 +35,7 @@ pub(crate) struct EvaluationContext<'a, E: EvaluationContextEnvironment> {
     pub(crate) type_values: &'a TypeValues,
     pub(crate) call_stack: &'a mut CallStack,
     pub(crate) map: Arc<Mutex<CodeMap>>,
+    pub(crate) fuel: RefCell<u64>,
 }
 
 /// Module-level or function environments are quite different,

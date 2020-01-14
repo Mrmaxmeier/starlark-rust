@@ -36,6 +36,9 @@ macro_rules! starlark_signature {
     ($signature:ident env $e:ident $(,$($rest:tt)+)?) => {
         $( starlark_signature!($signature $($rest)+) )?;
     };
+    ($signature:ident renv $e:ident $(,$($rest:tt)+)?) => {
+        $( starlark_signature!($signature $($rest)+) )?;
+    };
     ($signature:ident * $t:ident $(: $pt:ty)? $(,$($rest:tt)+)?) => {
         $signature.push_args(stringify!($t));
         $( starlark_signature!($signature $($rest)+) )?
@@ -102,6 +105,7 @@ macro_rules! starlark_parse_param_type {
 pub struct SignatureExtractionContext<'a> {
     pub call_stack: &'a mut CallStack,
     pub env: &'a TypeValues,
+    pub renv: &'a crate::environment::Environment,
     pub args: ParameterParser<'a>,
 }
 
@@ -118,6 +122,10 @@ macro_rules! starlark_signature_extraction {
     };
     ($ctx:ident env $e:ident $(,$($rest:tt)+)?) => {
         let $e = $ctx.env;
+        $( starlark_signature_extraction!($ctx $($rest)+) )?;
+    };
+    ($ctx:ident renv $e:ident $(,$($rest:tt)+)?) => {
+        let $e = $ctx.renv;
         $( starlark_signature_extraction!($ctx $($rest)+) )?;
     };
     ($ctx:ident * $t:ident $(: $pt:ty)? $(,$($rest:tt)+)?) => {
@@ -155,9 +163,11 @@ macro_rules! starlark_fun {
         fn $fn(
             call_stack: &mut $crate::eval::call_stack::CallStack,
             env: &$crate::environment::TypeValues,
+            renv: &$crate::environment::Environment,
             args: $crate::values::function::ParameterParser,
         ) -> $crate::values::ValueResult {
             let mut ctx = $crate::stdlib::macros::SignatureExtractionContext {
+                renv,
                 call_stack,
                 env,
                 args,
@@ -176,10 +186,12 @@ macro_rules! starlark_fun {
         fn $fn(
             call_stack: &mut $crate::eval::call_stack::CallStack,
             env: &$crate::environment::TypeValues,
+            renv: &$crate::environment::Environment,
             args: $crate::values::function::ParameterParser,
         ) -> $crate::values::ValueResult {
             let mut ctx = $crate::stdlib::macros::SignatureExtractionContext {
                 call_stack,
+                renv,
                 env,
                 args,
             };
