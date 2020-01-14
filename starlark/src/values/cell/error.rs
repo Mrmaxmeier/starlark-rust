@@ -18,7 +18,7 @@ use std::fmt;
 
 /// Error when borrow failed.
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum ObjectBorrowError {
+pub enum ObjectBorrowError {
     /// Can only fail if object is mutably borrowed
     BorrowedMut,
 }

@@ -172,7 +172,7 @@ impl Value {
         t.new_value()
     }
 
-    fn try_value_holder(
+    pub fn try_value_holder(
         &self,
         for_iter: bool,
     ) -> Result<ObjectRef<dyn TypedValueDyn>, ObjectBorrowError> {
@@ -196,7 +196,7 @@ impl Value {
         }
     }
 
-    fn value_holder(&self) -> ObjectRef<dyn TypedValueDyn> {
+    pub fn value_holder(&self) -> ObjectRef<dyn TypedValueDyn> {
         self.try_value_holder(false).unwrap()
     }
 
@@ -544,7 +544,7 @@ impl<T: TypedValue> TypedValueDyn for T {
 }
 
 /// Used in `inspect` function implementation.
-pub(crate) struct Inspect {
+pub struct Inspect {
     rust_type_name: &'static str,
     custom: Value,
 }
@@ -561,7 +561,7 @@ impl ValueHolder<dyn TypedValueDyn> {
 }
 
 /// Dynamically-dispatched version of [`ValueHolder`].
-pub(crate) trait TypedValueDyn: 'static {
+pub trait TypedValueDyn: 'static {
     fn as_any_ref(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
