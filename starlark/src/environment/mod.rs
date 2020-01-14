@@ -22,6 +22,7 @@ use crate::values::cell::ObjectCell;
 use crate::values::error::{RuntimeError, ValueError};
 use crate::values::string::rc::RcString;
 use crate::values::*;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -97,6 +98,7 @@ impl From<EnvironmentError> for ValueError {
 #[derive(Clone, Debug)]
 pub struct Environment {
     env: Rc<ObjectCell<EnvironmentContent>>,
+    pub(crate) fuel: std::cell::RefCell<u64>,
 }
 
 #[derive(Debug)]
@@ -137,6 +139,7 @@ impl Environment {
                 variables: HashMap::new(),
                 set_constructor: SetConstructor(None),
             })),
+            fuel: RefCell::new(0),
         }
     }
 
@@ -150,6 +153,7 @@ impl Environment {
                 variables: HashMap::new(),
                 set_constructor: SetConstructor(None),
             })),
+            fuel: RefCell::new(0),
         }
     }
 

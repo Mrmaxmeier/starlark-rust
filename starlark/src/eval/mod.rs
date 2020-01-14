@@ -476,11 +476,8 @@ fn eval_expr_local<E: EvaluationContextEnvironment>(
         },
         type_values: context.type_values,
         map: context.map.clone(),
-        fuel: context.fuel.clone(),
     };
-    let res = eval_expr(&local.expr, &mut ctx);
-    context.fuel = ctx.fuel;
-    res
+    eval_expr(&local.expr, &mut ctx)
 }
 
 // Evaluate the AST element, i.e. mutate the environment and return an evaluation result
@@ -698,7 +695,7 @@ fn eval_stmt<E: EvaluationContextEnvironment>(
             let mut result = Ok(Value::new(NoneType::None));
             for v in &t(iterable.iter(), &e2.span)? {
                 set_expr(e1, context, v)?;
-                if context.fuel.replace_with(|f| f.wrapping_sub(1)) == 1 {
+                if context.env.env().fuel.replace_with(|f| f.wrapping_sub(1)) == 1 {
                     return Err(EvalException::OutOfFuel(stmt.span));
                 }
                 match eval_block(st, context) {
@@ -784,6 +781,7 @@ pub fn eval_module(
     fuel: u64,
 ) -> EvalResult {
     let mut call_stack = CallStack::default();
+    env.fuel.replace_with(|_| fuel);
     let mut context = EvaluationContext {
         env: EvaluationContextEnvironmentModule {
             env: env.clone(),
@@ -793,7 +791,6 @@ pub fn eval_module(
         type_values,
         call_stack: &mut call_stack,
         map,
-        fuel: std::cell::RefCell::new(fuel),
     };
     eval_block(&module.block, &mut context)
 }

@@ -86,7 +86,6 @@
 use crate::environment::TypeValues;
 use crate::eval::call_stack;
 use crate::eval::call_stack::CallStack;
-use crate::values::context::{EvaluationContext, EvaluationContextEnvironment};
 use crate::values::error::UnsupportedOperation;
 use crate::values::error::ValueError;
 use crate::values::iter::{FakeTypedIterable, RefIterable, TypedIterable};

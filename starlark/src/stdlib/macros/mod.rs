@@ -282,8 +282,8 @@ macro_rules! starlark_signatures {
 ///
 ///     // It is also possible to capture the call stack with `call_stack name`.
 ///     // It is an opaque object which can only be used to call other functions:
-///     call(call_stack cs, env e, value) {
-///        value.call(cs, e, Default::default(), Default::default(), None, None)
+///     call(call_stack cs, env e, renv re, value) {
+///        value.call(cs, e, re, Default::default(), Default::default(), None, None)
 ///     }
 /// }
 /// #
